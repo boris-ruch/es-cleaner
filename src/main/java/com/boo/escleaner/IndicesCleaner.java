@@ -2,6 +2,8 @@ package com.boo.escleaner;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 
@@ -27,19 +29,31 @@ public class IndicesCleaner {
   @Value("${elasticserchEndpoint}")
   private String elasticsearchEndpoint;
 
+  @Value("#{'${indicesToDelete}'.split(',')}")
+  private List<String> indicesToDelete;
+
+  private RestHighLevelClient client;
+
   @PostConstruct
   public void deleteIndices() {
+    client = new RestHighLevelClient(RestClient.builder(new HttpHost(elasticsearchEndpoint, 443, "https")));
     String lastMonth = FORMATTER.format(LocalDate.now().minusMonths(1));
-    RestHighLevelClient client = new RestHighLevelClient(
-        RestClient.builder(new HttpHost(elasticsearchEndpoint, 443, "https")));
     String indexToDelete = FILEBEAT_VERSION + lastMonth + "*";
-    log.info("index to delete: '{}'", indexToDelete);
+    delete(indexToDelete);
+    delete(indicesToDelete.stream());
+  }
+
+  private void delete(Stream<String> indices) {
+    indices.forEach(this::delete);
+  }
+
+  private void delete(String indices) {
+    log.info("index to delete: '{}'", indices);
     try {
-      AcknowledgedResponse response = client.indices()
-          .delete(new DeleteIndexRequest(indexToDelete), RequestOptions.DEFAULT);
+      AcknowledgedResponse response = client.indices().delete(new DeleteIndexRequest(indices), RequestOptions.DEFAULT);
       log.info("response acknowledged :'{}'" + response.isAcknowledged());
     } catch (Exception e) {
-      log.error("failed to delete indices '{}'", indexToDelete, e);
+      log.error("failed to delete indices '{}'", indices, e);
     }
   }
 }
