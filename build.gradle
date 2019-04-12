@@ -20,10 +20,8 @@ repositories {
 }
 
 dependencies {
-
-
-    compile 'org.elasticsearch:elasticsearch:6.5.4'
-    compile 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.5.4'
+    implementation 'org.elasticsearch:elasticsearch:6.5.4'
+    implementation 'org.elasticsearch.client:elasticsearch-rest-high-level-client:6.5.4'
     implementation 'org.springframework.boot:spring-boot-starter'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
